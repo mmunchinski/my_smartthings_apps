@@ -28,7 +28,7 @@ preferences {
 	section ("Version 1.0 4/15/2018") { }
 	section("Select Outlets") {
 		input "powerMeters", "capability.powerMeter", title: "Outlers", multiple: true, required: true
-
+	}
     section("Notifications") { 
 		input "sendPush", "bool", title: "Push notification", required: false, defaultValue: "true"
         input "phone", "phone", title: "Phone number", required: false
