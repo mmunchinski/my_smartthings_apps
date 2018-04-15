@@ -27,7 +27,7 @@ definition(
 preferences {
 	section ("Version 1.0 4/15/2018") { }
 	section("Select Outlets") {
-		input "energyMeters", "capability.energyMeter", title: "Outlers", multiple: true, required: true
+		input "powerMeters", "capability.powerMeter", title: "Outlers", multiple: true, required: true
 
     section("Notifications") { 
 		input "sendPush", "bool", title: "Push notification", required: false, defaultValue: "true"
@@ -49,7 +49,50 @@ def updated() {
 }
 
 def initialize() {
-	// TODO: subscribe to attributes, devices, locations, etc.
+	subscribe(powerMeters, "power", meterHandler)   
 }
 
-// TODO: implement event handlers
+def meterHandler(evt) {
+
+    def meterValue = evt.value as double
+
+    if (!atomicState.lastValue) {
+    	atomicState.lastValue = meterValue
+    }
+
+    def lastValue = atomicState.lastValue as double
+    atomicState.lastValue = meterValue
+
+    def dUnit = evt.unit ?: "Watts"
+
+    def aboveThresholdValue = aboveThreshold as int
+    if (meterValue > aboveThresholdValue) {
+    	if (lastValue < aboveThresholdValue) { // only send notifications when crossing the threshold
+		    def msg = "${meter} reported ${evt.value} ${dUnit} which is above your threshold of ${aboveThreshold}."
+    	    sendMessage(msg)
+        } else {
+//        	log.debug "not sending notification for ${evt.description} because the threshold (${aboveThreshold}) has already been crossed"
+        }
+    }
+
+
+    def belowThresholdValue = belowThreshold as int
+    if (meterValue < belowThresholdValue) {
+    	if (lastValue > belowThresholdValue) { // only send notifications when crossing the threshold
+		    def msg = "${meter} reported ${evt.value} ${dUnit} which is below your threshold of ${belowThreshold}."
+    	    sendMessage(msg)
+        } else {
+//        	log.debug "not sending notification for ${evt.description} because the threshold (${belowThreshold}) has already been crossed"
+        }
+    }
+}
+
+def notificationHandler(toSend) { 
+    def message = toSend 
+    if (sendPush) {
+        sendPush(message)
+    }
+    if (phone) {
+        sendSms(phone, message)
+    }
+}
