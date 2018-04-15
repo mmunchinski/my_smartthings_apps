@@ -28,6 +28,7 @@ preferences {
 	section ("Version 1.0 4/15/2018") { }
 	section("Select Outlets") {
 		input "powerMeters", "capability.powerMeter", title: "Outlers", multiple: true, required: true
+        input(name: "belowThreshold", type: "number", title: "Low Threshold", required: true, description: "In Watts")
 	}
     section("Notifications") { 
 		input "sendPush", "bool", title: "Push notification", required: false, defaultValue: "true"
@@ -53,9 +54,11 @@ def initialize() {
 }
 
 def meterHandler(evt) {
-
+	
+    log.debug evt.value
+    
     def meterValue = evt.value as double
-
+    
     if (!atomicState.lastValue) {
     	atomicState.lastValue = meterValue
     }
@@ -65,24 +68,12 @@ def meterHandler(evt) {
 
     def dUnit = evt.unit ?: "Watts"
 
-    def aboveThresholdValue = aboveThreshold as int
-    if (meterValue > aboveThresholdValue) {
-    	if (lastValue < aboveThresholdValue) { // only send notifications when crossing the threshold
-		    def msg = "${meter} reported ${evt.value} ${dUnit} which is above your threshold of ${aboveThreshold}."
-    	    sendMessage(msg)
-        } else {
-//        	log.debug "not sending notification for ${evt.description} because the threshold (${aboveThreshold}) has already been crossed"
-        }
-    }
-
-
     def belowThresholdValue = belowThreshold as int
     if (meterValue < belowThresholdValue) {
     	if (lastValue > belowThresholdValue) { // only send notifications when crossing the threshold
 		    def msg = "${meter} reported ${evt.value} ${dUnit} which is below your threshold of ${belowThreshold}."
     	    sendMessage(msg)
         } else {
-//        	log.debug "not sending notification for ${evt.description} because the threshold (${belowThreshold}) has already been crossed"
         }
     }
 }
