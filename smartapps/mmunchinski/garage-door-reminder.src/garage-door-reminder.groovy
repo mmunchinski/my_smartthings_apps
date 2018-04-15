@@ -1,5 +1,5 @@
 /**
- *  Garage Door Reminder v1.0 (12/29/2016)
+ *  Garage Door Reminder v1.1 (1/12/2017)
  *
  *  Copyright 2016 Matt Munchinski
  *
@@ -11,6 +11,11 @@
  *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
+ *
+ *	Changelog
+ *	1.0 (12/29/2016) - Initial Release
+ *	1.1 (1/12/2017) - Added logic to subscribe to open/close contact sensor events so notify mechanism is not entirely dependent on presence sensors
+ *
  *
  */
 definition(
@@ -24,7 +29,7 @@ definition(
 
 
 preferences {
-	section ("Version 1.0 12/29/2016") { }
+	section ("Version 1.1 1/12/2017") { }
 	section("Select Presence Sensors") {
 		input "presenceSensors", "capability.presenceSensor", title: "Presence Sensors", multiple: true, required: true
 	}
@@ -53,6 +58,7 @@ def updated() {
 
 def initialize() {
 	subscribe(presenceSensors, "presence.not present", presenceHandler)
+    subscribe(contactSensors, "contact.open", presenceHandler)
 }
 
 def presenceHandler(evt) {
